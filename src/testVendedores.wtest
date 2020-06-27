@@ -1,0 +1,115 @@
+import provinciasYciudades.*
+import certificaciones.*
+import vendedores.*
+import CentroDistribucion.*
+import Clientes.*
+
+describe "testVendedores" {
+	// provincias
+	const buenosAires = new Provincia (poblacion = 15000000 )
+	const santaFe = new Provincia ( poblacion = 9000000 )
+	const cordoba = new Provincia ( poblacion = 10000000 )
+	const entreRios = new  Provincia ( poblacion = 8000000 )
+	
+	// ciudades
+	const chivilcoy = new Ciudad ( provincia = buenosAires ) 
+	const bragado = new Ciudad ( provincia = buenosAires ) 
+	const lobos = new Ciudad ( provincia = buenosAires )
+	const pergamino = new Ciudad ( provincia = buenosAires )
+	const zarate = new Ciudad ( provincia = buenosAires )
+	
+	const rosario = new Ciudad ( provincia = santaFe )
+	const rafaela = new Ciudad ( provincia = santaFe )
+	const amstrong  = new Ciudad ( provincia = santaFe )
+	
+	const sanFrancisco = new Ciudad ( provincia = cordoba )
+	
+	const diamante = new Ciudad ( provincia = entreRios )
+	
+	// certificaciones 
+	const viveres = new Certificacion ( esProducto = true, puntos = 10 )
+	const materiales = new Certificacion ( esProducto = true, puntos = 10 )
+	const servicios = new Certificacion ( esProducto = false, puntos = 5 )
+	const viajes = new Certificacion ( esProducto = false, puntos = 5 )
+	const autos = new Certificacion ( esProducto = true, puntos = 10 )
+	
+	const juan = new VendedorFijo( viveEn = rosario, certificaciones = [viveres, servicios, autos] )
+	const marcelo = new Viajante( viveEn = chivilcoy, certificaciones = [viveres, materiales, autos] )
+	const casaMarquez = new ComercioCorresponsal( viveEn = bragado, certificaciones = [viveres, servicios, viajes] )
+	const mercadosJorge = new ComercioCorresponsal( viveEn = lobos, certificaciones = [viveres, servicios, viajes, autos, materiales] )
+	const kioscosCholy = new ComercioCorresponsal( viveEn = rosario, certificaciones = [viveres, servicios, materiales, autos] )
+	
+	const laGranManzana = new CentroDistribucion ( ciudad = zarate )
+	const elSabalero = new CentroDistribucion( ciudad = rosario)
+	const laCordobeza = new CentroDistribucion ( ciudad = sanFrancisco )
+	
+	const carlitos = new Inseguro
+	//const ramon = new Detallista
+	//const mirta = new Humanista
+	
+	fixture { 
+		marcelo.habilitar(buenosAires)
+		marcelo.habilitar(cordoba)
+		
+		casaMarquez.agregarSucursal(chivilcoy)
+		casaMarquez.agregarSucursal(bragado)
+		casaMarquez.agregarSucursal(lobos)
+		casaMarquez.agregarSucursal(pergamino)
+		casaMarquez.agregarSucursal(zarate)
+		
+		mercadosJorge.agregarSucursal(rosario)
+		mercadosJorge.agregarSucursal(rafaela)
+		mercadosJorge.agregarSucursal(sanFrancisco)
+		mercadosJorge.agregarSucursal(diamante)
+		
+		kioscosCholy.agregarSucursal(rosario)
+		kioscosCholy.agregarSucursal(rafaela)
+		kioscosCholy.agregarSucursal(amstrong)
+		kioscosCholy.agregarSucursal(diamante)
+		
+		elSabalero.agregar(juan) 
+		elSabalero.agregar(kioscosCholy)
+		laGranManzana.agregar(marcelo)
+		laCordobeza.agregar(casaMarquez)
+		
+	}
+	test "Comercial Corresponsal" { 
+		assert.that(casaMarquez.esInfluyente())
+		assert.equals(4 ,mercadosJorge.sucursalesEnCiudades())
+		assert.equals(2 ,kioscosCholy.sucursalesEnProvincias())
+		assert.that(mercadosJorge.esInfluyente())
+		assert.notThat(kioscosCholy.esInfluyente())
+	}
+	test "vendedores" { 
+		assert.that(juan.puedeTrabajar(rosario))
+		assert.notThat(marcelo.puedeTrabajar(rosario))
+		assert.that( mercadosJorge.puedeTrabajar(rosario))
+		
+		assert.notThat(juan.esVersatil())
+		assert.that(mercadosJorge.esVersatil())
+		
+		assert.equals(30, marcelo.totalPuntos())
+		assert.that(marcelo.esFirme())
+	}
+	
+	test "Centros Distribucion" {
+		assert.equals(kioscosCholy, elSabalero.vendedorEstrella())
+		
+		assert.that(elSabalero.puedeCubrir(rosario))
+		
+		assert.equals([kioscosCholy],elSabalero.coleccionVendedoresGenericos())
+		assert.notThat(elSabalero.esRobusto())
+		
+		const caramelos = new Certificacion ( esProducto = true, puntos = 10 )
+		elSabalero.repartir(caramelos)
+		assert.equals([juan,kioscosCholy],elSabalero.coleccionVendedoresGenericos())
+	}
+	
+	test "Clientes" {
+		carlitos.puedeSerAtendido(mercadosJorge)
+		assert.equals(mercadosJorge, carlitos.vendedorAsignado())
+	}
+	
+	//assert.that(true)
+
+}
